@@ -18,9 +18,16 @@ const Register: React.FC = () => {
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -58,11 +65,22 @@ const Register: React.FC = () => {
     );
 
     if (error) {
-      toast({
-        title: "Registration Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      const isRateLimit = error.message?.toLowerCase().includes("rate limit") || 
+                          error.message?.toLowerCase().includes("429");
+      if (isRateLimit) {
+        setCooldown(60);
+        toast({
+          title: "Too many attempts",
+          description: "Please wait 60 seconds before trying again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } else {
       toast({
         title: "Registration Successful!",
@@ -196,12 +214,14 @@ const Register: React.FC = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={loading}>
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={loading || cooldown > 0}>
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Creating account...
                   </>
+                ) : cooldown > 0 ? (
+                  `Wait ${cooldown}s before retrying`
                 ) : (
                   "Create Account"
                 )}
