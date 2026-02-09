@@ -85,35 +85,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, shopName: string, ownerName: string, phone: string) => {
     const redirectUrl = window.location.origin;
     
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
+        data: {
+          shop_name: shopName,
+          owner_name: ownerName,
+          phone_number: phone,
+        },
       },
     });
 
-    if (error) {
-      return { error };
-    }
-
-    // Create profile after signup
-    if (data.user) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        user_id: data.user.id,
-        shop_name: shopName,
-        owner_name: ownerName,
-        phone_number: phone,
-        email,
-      });
-
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-        return { error: profileError };
-      }
-    }
-
-    return { error: null };
+    return { error: error ?? null };
   };
 
   const signIn = async (email: string, password: string) => {
