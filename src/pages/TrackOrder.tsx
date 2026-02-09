@@ -26,16 +26,19 @@ interface TrackingData {
   status: string;
   due_date: string;
   is_completed: boolean;
-  profiles: {
-    shop_name: string;
-    phone_number: string;
-  };
+  tailor_id: string;
+}
+
+interface TailorProfile {
+  shop_name: string;
+  phone_number: string;
 }
 
 const TrackOrder: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [orderId, setOrderId] = useState(searchParams.get("id") || "");
   const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
+  const [tailorProfile, setTailorProfile] = useState<TailorProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
@@ -59,15 +62,7 @@ const TrackOrder: React.FC = () => {
     try {
       const { data, error: queryError } = await supabase
         .from("orders")
-        .select(`
-          order_id,
-          stitch_category,
-          gender,
-          status,
-          due_date,
-          is_completed,
-          profiles!orders_tailor_id_fkey (shop_name, phone_number)
-        `)
+        .select("order_id, stitch_category, gender, status, due_date, is_completed, tailor_id")
         .eq("order_id", searchId.toUpperCase())
         .maybeSingle();
 
@@ -76,8 +71,16 @@ const TrackOrder: React.FC = () => {
       if (!data) {
         setError("Order not found. Please check your Order ID and try again.");
         setTrackingData(null);
+        setTailorProfile(null);
       } else {
         setTrackingData(data as any);
+        // Fetch tailor profile separately
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("shop_name, phone_number")
+          .eq("user_id", data.tailor_id)
+          .maybeSingle();
+        setTailorProfile(profile);
       }
     } catch (err: any) {
       console.error("Error tracking order:", err);
@@ -247,14 +250,14 @@ const TrackOrder: React.FC = () => {
                   {/* Shop Contact */}
                   <div className="bg-muted rounded-lg p-4">
                     <p className="font-semibold text-foreground">
-                      {(trackingData.profiles as any)?.shop_name}
+                      {tailorProfile?.shop_name}
                     </p>
                     <a
-                      href={`tel:${(trackingData.profiles as any)?.phone_number}`}
+                      href={`tel:${tailorProfile?.phone_number}`}
                       className="flex items-center gap-2 text-primary hover:underline mt-1"
                     >
                       <Phone className="w-4 h-4" />
-                      {(trackingData.profiles as any)?.phone_number}
+                      {tailorProfile?.phone_number}
                     </a>
                   </div>
                 </CardContent>
