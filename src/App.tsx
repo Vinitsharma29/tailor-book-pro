@@ -15,6 +15,7 @@ import NewOrder from "@/pages/NewOrder";
 import Orders from "@/pages/Orders";
 import OrderDetail from "@/pages/OrderDetail";
 import TrackOrder from "@/pages/TrackOrder";
+import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/new-order" element={<NewOrder />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
 
             {/* Catch-all */}
