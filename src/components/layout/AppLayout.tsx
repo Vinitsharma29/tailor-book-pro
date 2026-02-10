@@ -30,6 +30,7 @@ const AppLayout: React.FC = () => {
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/new-order", label: "New Order", icon: PlusCircle },
     { path: "/orders", label: "All Orders", icon: ListOrdered },
+    { path: "/profile", label: "Profile", icon: User },
   ];
 
   return (
