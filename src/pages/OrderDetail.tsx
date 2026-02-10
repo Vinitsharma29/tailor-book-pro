@@ -274,10 +274,10 @@ const OrderDetail: React.FC = () => {
                 Customer Details
               </h3>
               <div className="space-y-2 text-sm">
-                <p className="text-foreground font-medium">{order.customers.name}</p>
+                <p className="text-foreground font-medium">{order.customers?.name ?? "Unknown"}</p>
                 <p className="text-muted-foreground flex items-center gap-2">
                   <Phone className="w-3 h-3" />
-                  {order.customers.phone_number}
+                  {order.customers?.phone_number ?? "N/A"}
                 </p>
               </div>
             </div>
