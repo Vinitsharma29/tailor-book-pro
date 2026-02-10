@@ -79,9 +79,11 @@ const Orders: React.FC = () => {
   };
 
   const filteredOrders = orders.filter((order) => {
+    const customerName = order.customers?.name ?? "";
+    const customerPhone = order.customers?.phone_number ?? "";
     const matchesSearch =
-      order.customers.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customers.phone_number.includes(searchQuery) ||
+      customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customerPhone.includes(searchQuery) ||
       order.order_id.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesTab =
@@ -144,7 +146,7 @@ const Orders: React.FC = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold text-foreground">{order.customers.name}</span>
+                            <span className="font-semibold text-foreground">{order.customers?.name ?? "Unknown"}</span>
                             <Badge variant="outline" className="text-xs">
                               {order.order_id}
                             </Badge>
