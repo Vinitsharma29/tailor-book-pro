@@ -18,10 +18,11 @@ import {
   Check,
   Loader2,
   Share2,
-  Printer,
+  MessageCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { generateAndUploadBill, openWhatsAppShare } from "@/lib/bill-generator";
 
 interface OrderData {
   id: string;
@@ -51,6 +52,8 @@ const OrderDetail: React.FC = () => {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [generatingBill, setGeneratingBill] = useState(false);
+  const [billUrl, setBillUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrder();
@@ -153,6 +156,63 @@ const OrderDetail: React.FC = () => {
     }
   };
 
+  const handleShareOnWhatsApp = async () => {
+    if (!order || !profile) return;
+
+    const phone = order.customers?.phone_number;
+    if (!phone) {
+      toast({
+        title: "Phone number missing",
+        description: "Customer phone number is not available for this order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingBill(true);
+    try {
+      let url = billUrl;
+      if (!url) {
+        url = await generateAndUploadBill({
+          orderId: order.order_id,
+          tokenNumber: order.token_number,
+          customerName: order.customers?.name ?? "Customer",
+          customerPhone: phone,
+          gender: order.gender,
+          stitchCategory: order.stitch_category,
+          measurements: order.measurements,
+          workDescription: order.work_description,
+          dueDate: order.due_date,
+          charges: order.charges,
+          createdAt: order.created_at,
+          shopName: profile.shop_name,
+          shopPhone: profile.phone_number,
+        });
+        setBillUrl(url);
+      }
+
+      openWhatsAppShare(phone, url, {
+        orderId: order.order_id,
+        customerName: order.customers?.name ?? "Customer",
+        shopName: profile.shop_name,
+      });
+
+      toast({
+        title: "WhatsApp Opened",
+        description: "Bill PDF link is ready to send to the customer.",
+      });
+    } catch (error: any) {
+      console.error("Error generating bill:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate bill",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingBill(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -183,6 +243,20 @@ const OrderDetail: React.FC = () => {
           Back
         </Button>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareOnWhatsApp}
+            disabled={generatingBill}
+            className="text-green-600 border-green-300 hover:bg-green-50"
+          >
+            {generatingBill ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <MessageCircle className="w-4 h-4 mr-2" />
+            )}
+            Share on WhatsApp
+          </Button>
           <Button variant="outline" size="sm" onClick={handleShare}>
             <Share2 className="w-4 h-4 mr-2" />
             Share
