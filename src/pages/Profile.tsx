@@ -2,31 +2,25 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, User, Mail, Phone, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Profile: React.FC = () => {
   const { profile, loading } = useAuth();
+  const { t } = useTranslation();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return (<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>);
   }
 
   if (!profile) {
-    return (
-      <div className="text-center py-20 text-muted-foreground">
-        <p>Profile not found. Please try logging in again.</p>
-      </div>
-    );
+    return (<div className="text-center py-20 text-muted-foreground"><p>{t("profile.notFound")}</p></div>);
   }
 
   const details = [
-    { icon: Store, label: "Shop Name", value: profile.shop_name },
-    { icon: User, label: "Owner Name", value: profile.owner_name },
-    { icon: Mail, label: "Email", value: profile.email },
-    { icon: Phone, label: "Phone", value: profile.phone_number },
+    { icon: Store, label: t("profile.shopName"), value: profile.shop_name },
+    { icon: User, label: t("profile.ownerName"), value: profile.owner_name },
+    { icon: Mail, label: t("profile.email"), value: profile.email },
+    { icon: Phone, label: t("profile.phone"), value: profile.phone_number },
   ];
 
   return (

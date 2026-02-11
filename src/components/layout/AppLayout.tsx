@@ -14,12 +14,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
 const AppLayout: React.FC = () => {
   const { profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -27,10 +30,10 @@ const AppLayout: React.FC = () => {
   };
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/new-order", label: "New Order", icon: PlusCircle },
-    { path: "/orders", label: "All Orders", icon: ListOrdered },
-    { path: "/profile", label: "Profile", icon: User },
+    { path: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { path: "/new-order", label: t("nav.newOrder"), icon: PlusCircle },
+    { path: "/orders", label: t("nav.allOrders"), icon: ListOrdered },
+    { path: "/profile", label: t("nav.profile"), icon: User },
   ];
 
   return (
@@ -45,7 +48,7 @@ const AppLayout: React.FC = () => {
                 <Scissors className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-display font-bold text-primary-foreground">
-                Tailor Book
+                {t("common.appName")}
               </span>
             </Link>
 
@@ -70,6 +73,7 @@ const AppLayout: React.FC = () => {
 
             {/* User Menu */}
             <div className="hidden md:flex items-center gap-4">
+              <LanguageSelector variant="light" />
               <div className="flex items-center gap-2 text-primary-foreground/80">
                 <User className="w-4 h-4" />
                 <span className="text-sm font-medium">{profile?.shop_name}</span>
@@ -81,7 +85,7 @@ const AppLayout: React.FC = () => {
                 className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                {t("common.logout")}
               </Button>
             </div>
 
@@ -116,9 +120,12 @@ const AppLayout: React.FC = () => {
                 </Link>
               ))}
               <div className="border-t border-primary-foreground/10 pt-4 mt-4">
-                <div className="flex items-center gap-2 px-4 py-2 text-primary-foreground/80">
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">{profile?.shop_name}</span>
+                <div className="flex items-center justify-between px-4 py-2">
+                  <div className="flex items-center gap-2 text-primary-foreground/80">
+                    <User className="w-4 h-4" />
+                    <span className="text-sm">{profile?.shop_name}</span>
+                  </div>
+                  <LanguageSelector variant="light" />
                 </div>
                 <Button
                   variant="ghost"
@@ -126,7 +133,7 @@ const AppLayout: React.FC = () => {
                   className="w-full justify-start text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  {t("common.logout")}
                 </Button>
               </div>
             </div>
