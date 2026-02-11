@@ -7,21 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors, Mail, Lock, User, Phone, Store, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
-    shopName: "",
-    ownerName: "",
-    phone: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    shopName: "", ownerName: "", phone: "", email: "", password: "", confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     if (cooldown <= 0) return;
@@ -35,204 +33,110 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: t("register.passwordMismatch"), description: t("register.passwordMismatchDesc"), variant: "destructive" });
       return;
     }
-
     if (formData.password.length < 6) {
-      toast({
-        title: "Weak Password",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
+      toast({ title: t("register.weakPassword"), description: t("register.weakPasswordDesc"), variant: "destructive" });
       return;
     }
-
     setLoading(true);
-
-    const { error } = await signUp(
-      formData.email,
-      formData.password,
-      formData.shopName,
-      formData.ownerName,
-      formData.phone
-    );
-
+    const { error } = await signUp(formData.email, formData.password, formData.shopName, formData.ownerName, formData.phone);
     if (error) {
-      const isRateLimit = error.message?.toLowerCase().includes("rate limit") || 
-                          error.message?.toLowerCase().includes("429");
+      const isRateLimit = error.message?.toLowerCase().includes("rate limit") || error.message?.toLowerCase().includes("429");
       if (isRateLimit) {
         setCooldown(60);
-        toast({
-          title: "Too many attempts",
-          description: "Please wait 60 seconds before trying again.",
-          variant: "destructive",
-        });
+        toast({ title: t("register.tooManyAttempts"), description: t("register.waitBeforeRetry"), variant: "destructive" });
       } else {
-        toast({
-          title: "Registration Failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast({ title: t("register.registrationFailed"), description: error.message, variant: "destructive" });
       }
     } else {
-      toast({
-        title: "Registration Successful!",
-        description: "Please check your email to verify your account.",
-      });
+      toast({ title: t("register.registrationSuccess"), description: t("register.checkEmail") });
       navigate("/login");
     }
-
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4 py-8">
       <div className="w-full max-w-md animate-scale-in">
-        {/* Logo */}
+        <div className="flex justify-end mb-4">
+          <LanguageSelector variant="light" />
+        </div>
+
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-foreground/10 mb-3">
             <Scissors className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-display font-bold text-primary-foreground">Tailor Book</h1>
+          <h1 className="text-2xl font-display font-bold text-primary-foreground">{t("common.appName")}</h1>
         </div>
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-xl font-display">Create Your Account</CardTitle>
-            <CardDescription>Start managing your tailoring business</CardDescription>
+            <CardTitle className="text-xl font-display">{t("register.title")}</CardTitle>
+            <CardDescription>{t("register.subtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="shopName">Shop Name</Label>
+                  <Label htmlFor="shopName">{t("register.shopName")}</Label>
                   <div className="relative">
                     <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="shopName"
-                      name="shopName"
-                      placeholder="Your Shop"
-                      value={formData.shopName}
-                      onChange={handleChange}
-                      className="pl-10"
-                      required
-                    />
+                    <Input id="shopName" name="shopName" placeholder={t("register.shopNamePlaceholder")} value={formData.shopName} onChange={handleChange} className="pl-10" required />
                   </div>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="ownerName">Owner Name</Label>
+                  <Label htmlFor="ownerName">{t("register.ownerName")}</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="ownerName"
-                      name="ownerName"
-                      placeholder="Your Name"
-                      value={formData.ownerName}
-                      onChange={handleChange}
-                      className="pl-10"
-                      required
-                    />
+                    <Input id="ownerName" name="ownerName" placeholder={t("register.ownerNamePlaceholder")} value={formData.ownerName} onChange={handleChange} className="pl-10" required />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t("register.phone")}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="pl-10"
-                    required
-                  />
+                  <Input id="phone" name="phone" type="tel" placeholder={t("register.phonePlaceholder")} value={formData.phone} onChange={handleChange} className="pl-10" required />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("register.email")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="pl-10"
-                    required
-                  />
+                  <Input id="email" name="email" type="email" placeholder={t("register.emailPlaceholder")} value={formData.email} onChange={handleChange} className="pl-10" required />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("register.password")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="pl-10"
-                      required
-                    />
+                    <Input id="password" name="password" type="password" placeholder="••••••••" value={formData.password} onChange={handleChange} className="pl-10" required />
                   </div>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm</Label>
+                  <Label htmlFor="confirmPassword">{t("register.confirm")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      className="pl-10"
-                      required
-                    />
+                    <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} className="pl-10" required />
                   </div>
                 </div>
               </div>
 
               <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={loading || cooldown > 0}>
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating account...
-                  </>
-                ) : cooldown > 0 ? (
-                  `Wait ${cooldown}s before retrying`
-                ) : (
-                  "Create Account"
-                )}
+                {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t("register.creatingAccount")}</>) : cooldown > 0 ? (t("register.waitRetry", { seconds: cooldown })) : (t("register.createAccount"))}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">Already have an account? </span>
-              <Link to="/login" className="text-primary font-medium hover:underline">
-                Sign in
-              </Link>
+              <span className="text-muted-foreground">{t("register.hasAccount")} </span>
+              <Link to="/login" className="text-primary font-medium hover:underline">{t("register.signIn")}</Link>
             </div>
           </CardContent>
         </Card>
