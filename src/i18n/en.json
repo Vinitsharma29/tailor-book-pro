@@ -72,7 +72,9 @@
     "overdue": "Overdue",
     "recentOrders": "Recent Orders",
     "noOrders": "No orders yet",
-    "createFirst": "Create your first order"
+    "createFirst": "Create your first order",
+    "deliveryReminders": "Delivery Reminders",
+    "reminderText": "{{name}}'s order is due tomorrow"
   },
   "orders": {
     "title": "All Orders",
@@ -83,7 +85,8 @@
     "completed": "Completed",
     "all": "All",
     "noOrders": "No orders found",
-    "due": "Due"
+    "due": "Due",
+    "clearFilter": "Clear filter"
   },
   "orderDetail": {
     "shareWhatsApp": "Share on WhatsApp",
@@ -140,7 +143,9 @@
     "ownerName": "Owner Name",
     "email": "Email",
     "phone": "Phone",
-    "notFound": "Profile not found. Please try logging in again."
+    "notFound": "Profile not found. Please try logging in again.",
+    "editProfile": "Edit Profile",
+    "updated": "Profile updated successfully"
   },
   "trackOrder": {
     "title": "Track Your Order",

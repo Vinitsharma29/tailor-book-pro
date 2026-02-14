@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Calendar, Loader2 } from "lucide-react";
-import { format, isBefore } from "date-fns";
+import { format, isBefore, isAfter, addDays } from "date-fns";
 import { orderStatusLabels } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 
@@ -29,9 +29,19 @@ const Orders: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
 
+  const filterParam = searchParams.get("filter");
+
   useEffect(() => { fetchOrders(); }, []);
+
+  // If a filter param is set, switch to "all" tab so results show
+  useEffect(() => {
+    if (filterParam === "due-soon" || filterParam === "overdue") {
+      setActiveTab("all");
+    }
+  }, [filterParam]);
 
   const fetchOrders = async () => {
     try {
@@ -63,8 +73,28 @@ const Orders: React.FC = () => {
     const customerPhone = order.customers?.phone_number ?? "";
     const matchesSearch = customerName.toLowerCase().includes(searchQuery.toLowerCase()) || customerPhone.includes(searchQuery) || order.order_id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = activeTab === "all" || (activeTab === "active" && !order.is_completed) || (activeTab === "completed" && order.is_completed);
-    return matchesSearch && matchesTab;
+
+    if (!matchesSearch || !matchesTab) return false;
+
+    // Apply dashboard filter
+    if (filterParam === "due-soon") {
+      const today = new Date();
+      const threeDays = addDays(today, 3);
+      const dueDate = new Date(order.due_date);
+      return !order.is_completed && isAfter(dueDate, today) && isBefore(dueDate, threeDays);
+    }
+    if (filterParam === "overdue") {
+      return !order.is_completed && isBefore(new Date(order.due_date), new Date());
+    }
+
+    return true;
   });
+
+  const clearFilter = () => {
+    setSearchParams({});
+  };
+
+  const filterLabel = filterParam === "due-soon" ? t("dashboard.dueSoon") : filterParam === "overdue" ? t("dashboard.overdue") : null;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -76,12 +106,19 @@ const Orders: React.FC = () => {
         <Link to="/new-order"><Button className="bg-gradient-primary">{t("orders.newOrder")}</Button></Link>
       </div>
 
+      {filterLabel && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-sm">{filterLabel}</Badge>
+          <Button variant="ghost" size="sm" onClick={clearFilter}>{t("orders.clearFilter")}</Button>
+        </div>
+      )}
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder={t("orders.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); if (filterParam) clearFilter(); }}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="active">{t("orders.active")} ({orders.filter((o) => !o.is_completed).length})</TabsTrigger>
           <TabsTrigger value="completed">{t("orders.completed")} ({orders.filter((o) => o.is_completed).length})</TabsTrigger>
@@ -110,6 +147,9 @@ const Orders: React.FC = () => {
                             <span className="capitalize">{order.stitch_category.replace(/_/g, " ")}</span>
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{t("orders.due")}: {format(new Date(order.due_date), "MMM d, yyyy")}</span>
                             {order.charges && <span className="font-medium text-foreground">₹{order.charges}</span>}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <span>{order.customers?.phone_number}</span>
                           </div>
                         </div>
                         <Badge className={`${getStatusColor(order.status)} text-primary-foreground`}>{orderStatusLabels[order.status]}</Badge>

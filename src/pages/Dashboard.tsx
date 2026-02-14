@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +12,10 @@ import {
   CheckCircle2, 
   AlertCircle,
   TrendingUp,
-  Users
+  Users,
+  Bell
 } from "lucide-react";
-import { format, isAfter, isBefore, addDays } from "date-fns";
+import { format, isAfter, isBefore, addDays, isTomorrow } from "date-fns";
 import { orderStatusLabels } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 
@@ -37,13 +38,21 @@ interface RecentOrder {
   };
 }
 
+interface ReminderOrder {
+  order_id: string;
+  customer_name: string;
+  due_date: string;
+}
+
 const Dashboard: React.FC = () => {
   const { profile } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<OrderStats>({
     total: 0, active: 0, completed: 0, dueSoon: 0, overdue: 0,
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [reminders, setReminders] = useState<ReminderOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,19 +71,31 @@ const Dashboard: React.FC = () => {
       const today = new Date();
       const threeDaysFromNow = addDays(today, 3);
 
+      const dueSoonOrders = orders?.filter((o) => {
+        const dueDate = new Date(o.due_date);
+        return !o.is_completed && isAfter(dueDate, today) && isBefore(dueDate, threeDaysFromNow);
+      }) || [];
+
+      const overdueOrders = orders?.filter((o) => {
+        const dueDate = new Date(o.due_date);
+        return !o.is_completed && isBefore(dueDate, today);
+      }) || [];
+
       setStats({
         total: orders?.length || 0,
         active: orders?.filter((o) => !o.is_completed).length || 0,
         completed: orders?.filter((o) => o.is_completed).length || 0,
-        dueSoon: orders?.filter((o) => {
-          const dueDate = new Date(o.due_date);
-          return !o.is_completed && isAfter(dueDate, today) && isBefore(dueDate, threeDaysFromNow);
-        }).length || 0,
-        overdue: orders?.filter((o) => {
-          const dueDate = new Date(o.due_date);
-          return !o.is_completed && isBefore(dueDate, today);
-        }).length || 0,
+        dueSoon: dueSoonOrders.length,
+        overdue: overdueOrders.length,
       });
+
+      // Delivery reminders: orders due tomorrow
+      const tomorrowOrders = orders?.filter((o) => !o.is_completed && isTomorrow(new Date(o.due_date))) || [];
+      setReminders(tomorrowOrders.map((o) => ({
+        order_id: o.order_id,
+        customer_name: (o.customers as any)?.name || "Unknown",
+        due_date: o.due_date,
+      })));
 
       setRecentOrders(
         (orders?.slice(0, 5) || []).map((o) => ({
@@ -108,6 +129,28 @@ const Dashboard: React.FC = () => {
         <p className="text-primary-foreground/80">{profile?.shop_name}</p>
       </div>
 
+      {/* Delivery Reminders */}
+      {reminders.length > 0 && (
+        <Card className="border-warning/50 bg-warning/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-display flex items-center gap-2 text-warning">
+              <Bell className="w-5 h-5" />
+              {t("dashboard.deliveryReminders")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {reminders.map((r) => (
+              <div key={r.order_id} className="flex items-center justify-between p-3 rounded-lg bg-warning/10">
+                <span className="text-sm font-medium text-foreground">
+                  {t("dashboard.reminderText", { name: r.customer_name })}
+                </span>
+                <Badge variant="outline" className="text-xs">{r.order_id}</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <Link to="/new-order">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-accent hover:border-accent/80">
@@ -136,8 +179,12 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.activeOrders")}</p><p className="text-2xl font-bold text-foreground">{stats.active}</p></div><div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-info" /></div></div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.completed")}</p><p className="text-2xl font-bold text-foreground">{stats.completed}</p></div><div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center"><CheckCircle2 className="w-5 h-5 text-success" /></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.dueSoon")}</p><p className="text-2xl font-bold text-warning">{stats.dueSoon}</p></div><div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center"><Clock className="w-5 h-5 text-warning" /></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.overdue")}</p><p className="text-2xl font-bold text-destructive">{stats.overdue}</p></div><div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center"><AlertCircle className="w-5 h-5 text-destructive" /></div></div></CardContent></Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/orders?filter=due-soon")}>
+          <CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.dueSoon")}</p><p className="text-2xl font-bold text-warning">{stats.dueSoon}</p></div><div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center"><Clock className="w-5 h-5 text-warning" /></div></div></CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/orders?filter=overdue")}>
+          <CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.overdue")}</p><p className="text-2xl font-bold text-destructive">{stats.overdue}</p></div><div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center"><AlertCircle className="w-5 h-5 text-destructive" /></div></div></CardContent>
+        </Card>
       </div>
 
       <Card>
