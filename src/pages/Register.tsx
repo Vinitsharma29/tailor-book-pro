@@ -61,10 +61,6 @@ const Register: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4 py-8">
       <div className="w-full max-w-md animate-scale-in">
-        <div className="flex justify-end mb-4">
-          <LanguageSelector variant="light" />
-        </div>
-
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-foreground/10 mb-3">
             <Scissors className="w-7 h-7 text-primary-foreground" />
@@ -137,6 +133,10 @@ const Register: React.FC = () => {
             <div className="mt-6 text-center text-sm">
               <span className="text-muted-foreground">{t("register.hasAccount")} </span>
               <Link to="/login" className="text-primary font-medium hover:underline">{t("register.signIn")}</Link>
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <LanguageSelector variant="dark" />
             </div>
           </CardContent>
         </Card>
