@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { orderStatusLabels, orderStatusOrder } from "@/lib/supabase";
 import {
-  ArrowLeft, Calendar, Phone, User, Ruler, FileText, Check, Loader2, Share2, MessageCircle,
+  ArrowLeft, Calendar, Phone, User, Ruler, FileText, Check, Loader2, MessageCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -99,22 +99,6 @@ const OrderDetail: React.FC = () => {
     return colors[status] || "bg-muted";
   };
 
-  const handleShare = async () => {
-    const trackingUrl = `${window.location.origin}/track?id=${order?.order_id}`;
-    const message = `Track your order: ${order?.order_id}\n${trackingUrl}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `Order ${order?.order_id}`, text: message, url: trackingUrl });
-      } catch {
-        // User cancelled share
-      }
-    } else {
-      navigator.clipboard.writeText(trackingUrl);
-      toast({ title: t("orderDetail.linkCopied"), description: t("orderDetail.trackingLinkCopied") });
-    }
-  };
-
   const handleShareOnWhatsApp = async () => {
     if (!order || !profile) return;
 
@@ -144,21 +128,6 @@ const OrderDetail: React.FC = () => {
           shopPhone: profile.phone_number,
         });
         setBillUrl(url);
-      }
-
-      // Try Web Share API first on mobile, fallback to WhatsApp link
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: `Bill - ${order.order_id}`,
-            text: `Hello ${order.customers?.name ?? "Customer"}, your tailoring bill is ready. Download your bill here: ${url}`,
-            url: url,
-          });
-          toast({ title: t("orderDetail.whatsAppOpened"), description: t("orderDetail.billReadyToSend") });
-          return;
-        } catch {
-          // User cancelled or not supported, fall through to WhatsApp link
-        }
       }
 
       openWhatsAppShare(phone, url, {
@@ -197,15 +166,10 @@ const OrderDetail: React.FC = () => {
         <Button variant="ghost" onClick={() => navigate("/orders")}>
           <ArrowLeft className="w-4 h-4 mr-2" />{t("common.back")}
         </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleShareOnWhatsApp} disabled={generatingBill} className="text-green-600 border-green-300 hover:bg-green-50">
-            {generatingBill ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageCircle className="w-4 h-4 mr-2" />}
-            {t("orderDetail.shareWhatsApp")}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleShare}>
-            <Share2 className="w-4 h-4 mr-2" />{t("orderDetail.share")}
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={handleShareOnWhatsApp} disabled={generatingBill} className="text-green-600 border-green-300 hover:bg-green-50">
+          {generatingBill ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageCircle className="w-4 h-4 mr-2" />}
+          {t("orderDetail.shareWhatsApp")}
+        </Button>
       </div>
 
       <Card className="overflow-hidden">

@@ -45,11 +45,6 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <div className="w-full max-w-md animate-scale-in">
-        {/* Language Selector */}
-        <div className="flex justify-end mb-4">
-          <LanguageSelector variant="light" />
-        </div>
-
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-foreground/10 mb-4">
@@ -115,6 +110,10 @@ const Login: React.FC = () => {
               <Link to="/register" className="text-primary font-medium hover:underline">
                 {t("login.registerHere")}
               </Link>
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <LanguageSelector variant="dark" />
             </div>
           </CardContent>
         </Card>
