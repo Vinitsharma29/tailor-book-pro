@@ -177,8 +177,12 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.activeOrders")}</p><p className="text-2xl font-bold text-foreground">{stats.active}</p></div><div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-info" /></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.completed")}</p><p className="text-2xl font-bold text-foreground">{stats.completed}</p></div><div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center"><CheckCircle2 className="w-5 h-5 text-success" /></div></div></CardContent></Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/orders?filter=active")}>
+          <CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.activeOrders")}</p><p className="text-2xl font-bold text-foreground">{stats.active}</p></div><div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-info" /></div></div></CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/orders?filter=completed")}>
+          <CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.completed")}</p><p className="text-2xl font-bold text-foreground">{stats.completed}</p></div><div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center"><CheckCircle2 className="w-5 h-5 text-success" /></div></div></CardContent>
+        </Card>
         <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/orders?filter=due-soon")}>
           <CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t("dashboard.dueSoon")}</p><p className="text-2xl font-bold text-warning">{stats.dueSoon}</p></div><div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center"><Clock className="w-5 h-5 text-warning" /></div></div></CardContent>
         </Card>
