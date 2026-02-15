@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, email?: string) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -41,6 +41,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Error fetching profile:", error);
       return null;
     }
+
+    // Auto-create profile if missing
+    if (!data && email) {
+      const { data: newProfile, error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          user_id: userId,
+          email: email,
+          shop_name: "",
+          owner_name: "",
+          phone_number: "",
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Error creating profile:", insertError);
+        return null;
+      }
+      return newProfile as Profile;
+    }
+
     return data as Profile | null;
   };
 
@@ -58,9 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // Use setTimeout to avoid potential race conditions
         setTimeout(async () => {
-          const profileData = await fetchProfile(session.user.id);
+          const profileData = await fetchProfile(session.user.id, session.user.email);
           setProfile(profileData);
         }, 0);
       } else {
@@ -74,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id).then(setProfile);
+        fetchProfile(session.user.id, session.user.email).then(setProfile);
       }
       setLoading(false);
     });
