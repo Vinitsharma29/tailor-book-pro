@@ -36,9 +36,13 @@ const Orders: React.FC = () => {
 
   useEffect(() => { fetchOrders(); }, []);
 
-  // If a filter param is set, switch to "all" tab so results show
+  // If a filter param is set, switch to appropriate tab
   useEffect(() => {
-    if (filterParam === "due-soon" || filterParam === "overdue") {
+    if (filterParam === "active") {
+      setActiveTab("active");
+    } else if (filterParam === "completed") {
+      setActiveTab("completed");
+    } else if (filterParam === "due-soon" || filterParam === "overdue") {
       setActiveTab("all");
     }
   }, [filterParam]);
